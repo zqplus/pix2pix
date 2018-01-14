@@ -137,7 +137,7 @@ function defineG_unet_128(input_nc, output_nc, ngf)
     local d7 = d6 - nn.ReLU(true) - nn.SpatialFullConvolution(ngf * 2, output_nc, 4, 4, 2, 2, 1, 1)
     -- input is (ngf) x128 x 128
     
-    local o1 = d7 - nn.Tanh()
+    local o1 = d7 -- nn.Tanh()
     
     netG = nn.gModule({e1},{o1})
     

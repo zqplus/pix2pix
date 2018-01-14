@@ -3,6 +3,9 @@ import os
 import numpy as np
 import cv2
 import argparse
+import h5py
+from PIL import Image, ImageFilter
+
 
 parser = argparse.ArgumentParser('create image pairs')
 parser.add_argument('--fold_A', dest='fold_A', help='input directory for image A', type=str, default='../dataset/50kshoes_edges')
@@ -17,13 +20,13 @@ for arg in vars(args):
 
 splits = filter( lambda f: not f.startswith('.'), os.listdir(args.fold_A)) # ignore hidden folders like .DS_Store
 
-for sp in splits:
+for sp in splits:#[train,val,test]
     img_fold_A = os.path.join(args.fold_A, sp)
     img_fold_B = os.path.join(args.fold_B, sp)
     img_list = filter( lambda f: not f.startswith('.'), os.listdir(img_fold_A)) # ignore hidden folders like .DS_Store
     if args.use_AB: 
         img_list = [img_path for img_path in img_list if '_A.' in img_path]
-
+    print(img_fold_A,img_fold_B)
     num_imgs = min(args.num_imgs, len(img_list))
     print('split = %s, use %d/%d images' % (sp, num_imgs, len(img_list)))
     img_fold_AB = os.path.join(args.fold_AB, sp)
@@ -43,8 +46,24 @@ for sp in splits:
             if args.use_AB:
                 name_AB = name_AB.replace('_A.', '.') # remove _A
             path_AB = os.path.join(img_fold_AB, name_AB)
-            im_A = cv2.imread(path_A, cv2.IMREAD_COLOR)
-            im_B = cv2.imread(path_B, cv2.IMREAD_COLOR)
+            #im_A = cv2.imread(path_A, cv2.IMREAD_GRAYSCALE)
+            #im_B = cv2.imread(path_B, cv2.IMREAD_GRAYSCALE)
+	    #print(im_A.shape,im_B.shape)
+	    #print(pillow.__version__)
+	    #im_A = Image.open(path_A)	
+	    #im_B = Image.open(path_B)
+	    fa=h5py.File(path_A,'r')
+	    #aa=fa.keys()
+	    #print(aa)
+	    im_At=fa['img']
+	    im_A=np.transpose(im_At)
+	    fb=h5py.File(path_B,'r')
+	    im_Bt=fb['img']
+	    im_B=np.transpose(im_Bt)
             im_AB = np.concatenate([im_A, im_B], 1)
-            cv2.imwrite(path_AB, im_AB)
+	    fab=h5py.File(path_AB, "w")
+	    dset = fab.create_dataset("img", data=im_AB)
+            #cv2.imwrite(path_AB, im_AB)
+	    #im_AB.save(path_AB, "IM")
+
 

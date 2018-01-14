@@ -6,29 +6,30 @@
 require 'image'
 require 'nn'
 require 'nngraph'
+require 'hdf5'
 util = paths.dofile('util/util.lua')
 torch.setdefaulttensortype('torch.FloatTensor')
 
 opt = {
     DATA_ROOT = '',           -- path to images (should have subfolders 'train', 'val', etc)
     batchSize = 1,            -- # images in batch
-    loadSize = 256,           -- scale images to this size
-    fineSize = 256,           --  then crop to this size
+    loadSize = 128,           -- scale images to this size
+    fineSize = 128,           --  then crop to this size
     flip=0,                   -- horizontal mirroring data augmentation
     display = 1,              -- display samples while training. 0 = false
     display_id = 200,         -- display window id.
-    gpu = 1,                  -- gpu = 0 is CPU mode. gpu=X is GPU mode on GPU X
+    gpu = 0,                  -- gpu = 0 is CPU mode. gpu=X is GPU mode on GPU X
     how_many = 'all',         -- how many test images to run (set to all to run on every image found in the data/phase folder)
     which_direction = 'AtoB', -- AtoB or BtoA
     phase = 'val',            -- train, val, test ,etc
     preprocess = 'regular',   -- for special purpose preprocessing, e.g., for colorization, change this (selects preprocessing functions in util.lua)
     aspect_ratio = 1.0,       -- aspect ratio of result images
     name = '',                -- name of experiment, selects which model to run, should generally should be passed on command line
-    input_nc = 3,             -- #  of input image channels
-    output_nc = 3,            -- #  of output image channels
+    input_nc = 1,             -- #  of input image channels
+    output_nc = 1,            -- #  of output image channels
     serial_batches = 1,       -- if 1, takes images in order to make batches, otherwise takes them randomly
     serial_batch_iter = 1,    -- iter into serial image list
-    cudnn = 1,                -- set to 0 to not use cudnn (untested)
+    cudnn = 0,                -- set to 0 to not use cudnn (untested)
     checkpoints_dir = './checkpoints', -- loads models from here
     results_dir='./results/',          -- saves results here
     which_epoch = 'latest',            -- which epoch to test? set to 'latest' to use latest cached model
@@ -106,19 +107,19 @@ for n=1,math.floor(opt.how_many/opt.batchSize) do
         input = input:cuda()
     end
     
-    if opt.preprocess == 'colorization' then
-       local output_AB = netG:forward(input):float()
-       local input_L = input:float() 
-       output = util.deprocessLAB_batch(input_L, output_AB)
-       local target_AB = target:float()
-       target = util.deprocessLAB_batch(input_L, target_AB)
-       input = util.deprocessL_batch(input_L)
-    else 
-        output = util.deprocess_batch(netG:forward(input))
-        input = util.deprocess_batch(input):float()
-        output = output:float()
-        target = util.deprocess_batch(target):float()
-    end
+    -- if opt.preprocess == 'colorization' then
+    --    local output_AB = netG:forward(input):float()
+    --    local input_L = input:float() 
+    --    output = util.deprocessLAB_batch(input_L, output_AB)
+    --    local target_AB = target:float()
+    --    target = util.deprocessLAB_batch(input_L, target_AB)
+    --    input = util.deprocessL_batch(input_L)
+    -- else 
+    output = netG:forward(input)
+    input = input:float()-input:min()/(input:max() - input:min())
+    output = output:float()-output:min()/(output:max() - output:min())
+    target = target:float()-target:min()/(target:max() - target:min())
+    -- end
     paths.mkdir(paths.concat(opt.results_dir, opt.netG_name .. '_' .. opt.phase))
     local image_dir = paths.concat(opt.results_dir, opt.netG_name .. '_' .. opt.phase, 'images')
     paths.mkdir(image_dir)
@@ -129,18 +130,29 @@ for n=1,math.floor(opt.how_many/opt.batchSize) do
     -- print(output:size())
     -- print(target:size())
     for i=1, opt.batchSize do
-        image.save(paths.concat(image_dir,'input',filepaths_curr[i]), image.scale(input[i],input[i]:size(2),input[i]:size(3)/opt.aspect_ratio))
-        image.save(paths.concat(image_dir,'output',filepaths_curr[i]), image.scale(output[i],output[i]:size(2),output[i]:size(3)/opt.aspect_ratio))
-        image.save(paths.concat(image_dir,'target',filepaths_curr[i]), image.scale(target[i],target[i]:size(2),target[i]:size(3)/opt.aspect_ratio))
+        require 'hdf5'
+        local myFile = hdf5.open(paths.concat(image_dir,'input',filepaths_curr[i]), 'w')
+        myFile:write('/img', input[i])
+        myFile:close()
+        local myFile = hdf5.open(paths.concat(image_dir,'target',filepaths_curr[i]), 'w')
+        myFile:write('/img', target[i])
+        myFile:close()
+        local myFile = hdf5.open(paths.concat(image_dir,'output',filepaths_curr[i]), 'w')
+        myFile:write('/img', output[i])
+        myFile:close()
+        --print(paths.concat(image_dir,'input',filepaths_curr[i]))
+        image.save(paths.concat(image_dir,'input',filepaths_curr[i]):gsub('.h5','.png'), image.scale(input[i],input[i]:size(2),input[i]:size(3)/opt.aspect_ratio))
+        image.save(paths.concat(image_dir,'output',filepaths_curr[i]):gsub('.h5','.png'), image.scale(output[i],output[i]:size(2),output[i]:size(3)/opt.aspect_ratio))
+        image.save(paths.concat(image_dir,'target',filepaths_curr[i]):gsub('.h5','.png'), image.scale(target[i],target[i]:size(2),target[i]:size(3)/opt.aspect_ratio))
     end
     print('Saved images to: ', image_dir)
     
     if opt.display then
       if opt.preprocess == 'regular' then
         disp = require 'display'
-        disp.image(util.scaleBatch(input,100,100),{win=opt.display_id, title='input'})
-        disp.image(util.scaleBatch(output,100,100),{win=opt.display_id+1, title='output'})
-        disp.image(util.scaleBatch(target,100,100),{win=opt.display_id+2, title='target'})
+        disp.image(input,{win=opt.display_id, title='input'})
+        disp.image(output,{win=opt.display_id+1, title='output'})
+        disp.image(target,{win=opt.display_id+2, title='target'})
         
         print('Displayed images')
       end

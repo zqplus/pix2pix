@@ -14,21 +14,21 @@ require 'models'
 opt = {
    DATA_ROOT = '',         -- path to images (should have subfolders 'train', 'val', etc)
    batchSize = 1,          -- # images in batch
-   loadSize = 286,         -- scale images to this size
-   fineSize = 256,         --  then crop to this size
-   ngf = 64,               -- #  of gen filters in first conv layer
-   ndf = 64,               -- #  of discrim filters in first conv layer
-   input_nc = 3,           -- #  of input image channels
-   output_nc = 3,          -- #  of output image channels
-   niter = 200,            -- #  of iter at starting learning rate
-   lr = 0.0002,            -- initial learning rate for adam
+   loadSize = 128,         -- scale images to this size
+   fineSize = 128,         --  then crop to this size
+   ngf = 32,               -- #  of gen filters in first conv layer
+   ndf = 32,               -- #  of discrim filters in first conv layer
+   input_nc = 1,           -- #  of input image channels
+   output_nc = 1,          -- #  of output image channels
+   niter = 800,            -- #  of iter at starting learning rate
+   lr = 0.0001,            -- initial learning rate for adam
    beta1 = 0.5,            -- momentum term of adam
    ntrain = math.huge,     -- #  of examples per epoch. math.huge for full dataset
    flip = 1,               -- if flip the images for data argumentation
    display = 1,            -- display samples while training. 0 = false
    display_id = 10,        -- display window id.
    display_plot = 'errL1',    -- which loss values to plot over time. Accepted values include a comma seperated list of: errL1, errG, and errD
-   gpu = 1,                -- gpu = 0 is CPU mode. gpu=X is GPU mode on GPU X
+   gpu = 0,                -- gpu = 0 is CPU mode. gpu=X is GPU mode on GPU X
    name = '',              -- name of the experiment, should generally be passed on the command line
    which_direction = 'AtoB',    -- AtoB or BtoA
    phase = 'train',             -- train, val, test, etc
@@ -43,12 +43,12 @@ opt = {
    serial_batches = 0,          -- if 1, takes images in order to make batches, otherwise takes them randomly
    serial_batch_iter = 1,       -- iter into serial image list
    checkpoints_dir = './checkpoints', -- models are saved here
-   cudnn = 1,                         -- set to 0 to not use cudnn
+   cudnn = 0,                         -- set to 0 to not use cudnn
    condition_GAN = 1,                 -- set to 0 to use unconditional discriminator
    use_GAN = 1,                       -- set to 0 to turn off GAN term
    use_L1 = 1,                        -- set to 0 to turn off L1 term
    which_model_netD = 'basic', -- selects model to use for netD
-   which_model_netG = 'unet',  -- selects model to use for netG
+   which_model_netG = 'unet_128',  -- selects model to use for netG
    n_layers_D = 0,             -- only used if which_model_netD=='n_layers'
    lambda = 100,               -- weight on L1 term in objective
 }
@@ -359,42 +359,42 @@ for epoch = 1, opt.niter do
                 disp.image(util.deprocessLAB_batch(real_A_s, fake_B_s), {win=opt.display_id+1, title=opt.name .. ' output'})
                 disp.image(util.deprocessLAB_batch(real_A_s, real_B_s), {win=opt.display_id+2, title=opt.name .. ' target'})
             else
-                disp.image(util.deprocess_batch(util.scaleBatch(real_A:float(),100,100)), {win=opt.display_id, title=opt.name .. ' input'})
-                disp.image(util.deprocess_batch(util.scaleBatch(fake_B:float(),100,100)), {win=opt.display_id+1, title=opt.name .. ' output'})
-                disp.image(util.deprocess_batch(util.scaleBatch(real_B:float(),100,100)), {win=opt.display_id+2, title=opt.name .. ' target'})
+                disp.image(real_A[{{1},{},{}}]:float(), {win=opt.display_id, title=opt.name .. ' input'})
+                disp.image(fake_B[{{1},{},{}}]:float(), {win=opt.display_id+1, title=opt.name .. ' output'})
+                disp.image(real_B[{{1},{},{}}]:float(), {win=opt.display_id+2, title=opt.name .. ' target'})
             end
         end
       
         -- write display visualization to disk
         --  runs on the first batchSize images in the opt.phase set
-        if counter % opt.save_display_freq == 0 and opt.display then
-            local serial_batches=opt.serial_batches
-            opt.serial_batches=1
-            opt.serial_batch_iter=1
+        -- if counter % opt.save_display_freq == 0 and opt.display then
+        --     local serial_batches=opt.serial_batches
+        --     opt.serial_batches=1
+        --     opt.serial_batch_iter=1
             
-            local image_out = nil
-            local N_save_display = 10 
-            local N_save_iter = torch.max(torch.Tensor({1, torch.floor(N_save_display/opt.batchSize)}))
-            for i3=1, N_save_iter do
+        --     local image_out = nil
+        --     local N_save_display = 10 
+        --     local N_save_iter = torch.max(torch.Tensor({1, torch.floor(N_save_display/opt.batchSize)}))
+        --     for i3=1, N_save_iter do
             
-                createRealFake()
-                print('save to the disk')
-                if opt.preprocess == 'colorization' then 
-                    for i2=1, fake_B:size(1) do
-                        if image_out==nil then image_out = torch.cat(util.deprocessL(real_A[i2]:float()),util.deprocessLAB(real_A[i2]:float(), fake_B[i2]:float()),3)/255.0
-                        else image_out = torch.cat(image_out, torch.cat(util.deprocessL(real_A[i2]:float()),util.deprocessLAB(real_A[i2]:float(), fake_B[i2]:float()),3)/255.0, 2) end
-                    end
-                else
-                    for i2=1, fake_B:size(1) do
-                        if image_out==nil then image_out = torch.cat(util.deprocess(real_A[i2]:float()),util.deprocess(fake_B[i2]:float()),3)
-                        else image_out = torch.cat(image_out, torch.cat(util.deprocess(real_A[i2]:float()),util.deprocess(fake_B[i2]:float()),3), 2) end
-                    end
-                end
-            end
-            image.save(paths.concat(opt.checkpoints_dir,  opt.name , counter .. '_train_res.png'), image_out)
+        --         createRealFake()
+        --         print('save to the disk')
+        --         if opt.preprocess == 'colorization' then 
+        --             for i2=1, fake_B:size(1) do
+        --                 if image_out==nil then image_out = torch.cat(util.deprocessL(real_A[i2]:float()),util.deprocessLAB(real_A[i2]:float(), fake_B[i2]:float()),3)/255.0
+        --                 else image_out = torch.cat(image_out, torch.cat(util.deprocessL(real_A[i2]:float()),util.deprocessLAB(real_A[i2]:float(), fake_B[i2]:float()),3)/255.0, 2) end
+        --             end
+        --         else
+        --             for i2=1, fake_B:size(1) do
+        --                 if image_out==nil then image_out = torch.cat(util.deprocess(real_A[i2]:float()),util.deprocess(fake_B[i2]:float()),3)
+        --                 else image_out = torch.cat(image_out, torch.cat(util.deprocess(real_A[i2]:float()),util.deprocess(fake_B[i2]:float()),3), 2) end
+        --             end
+        --         end
+        --     end
+        --     image.save(paths.concat(opt.checkpoints_dir,  opt.name , counter .. '_train_res.png'), image_out)
             
-            opt.serial_batches=serial_batches
-        end
+        --     opt.serial_batches=serial_batches
+        -- end
         
         -- logging and display plot
         if counter % opt.print_freq == 0 then
