@@ -1,0 +1,41 @@
+d=114;
+for i=1:d
+    ii=num2str(i);
+    %selectWindow("r_c_dual_noise_bt_recon-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c_reg\\113.im")
+    %selectWindow("r4c1_dual_noise_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r4c1_noise\\113.im");
+    %run("Im Reader", "open=C:\\Users\\zq\\Desktop\\denoise_gan\\r4c1_rc_target\\1.im");
+    %selectWindow("r1c8_dual_noise_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r1c8_noise\\113.im");
+    %run("Im Reader", "open=C:\\Users\\zq\\Desktop\\denoise_gan\\r1c8_rc_target\\1.im");
+    %selectWindow("r_c1_dual_noise_bt_recon-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1\\r_c1_dual_noise\\113.im");
+    %selectWindow("c1_dual_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\c1\\113.im");
+    %selectWindow("r2c8_dual_noise_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1\\r2c8_dual_noise\\113.im");
+    %selectWindow("r3c8_dual_noise_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1\\r3c8_dual_noise\\113.im");
+    %selectWindow("r4c8_dual_noise_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1\\r4c8_dual_noise\\113.im");
+    %selectWindow("r5c8_dual_noise_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1\\r5c8_dual_noise\\113.im");
+    %selectWindow("r6c8_dual_noise_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1\\r6c8_dual_noise\\113.im");
+    %run("Im Reader", "open=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1\\r1c8_r_c1_target\\2.im");
+    %run("Im Reader", "open=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1\\r2c8_r_c1_target\\2.im");
+    %selectWindow("c1_noise_act_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1_try\\c1\\113.im");
+    %close();
+    %selectWindow("r1c8_cact_noise_recon.10-0113");
+    %run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1_try\\r1c8_act_h5\\113.im");
+    %close();
+    %run("Im Reader", "open=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1_try\\r1c8_act_target\\1.im");
+    %disp(['selectWindow("r6c8_cact_noise_recon.10-000',ii,'");']);
+    %disp(['run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r1c8_noise\\0',ii,'.im")']);
+    %disp(['run("Save As Im", "save=C:\\Users\\zq\\Desktop\\denoise_gan\\r_c1_try\\r6c8_act_h5\\00',ii,'.im");']);
+    %disp('close();');
+    %run("Im Reader", "open=C:\\Users\\zq\\Desktop\\denoise_gan\\ungate_try_output\\ungate_try_output\\r1c8_output\\1.im");
+    disp(['run("Im Reader", "open=C:\\Users\\zq\\Desktop\\denoise_gan\\ungate_try_output\\ungate_try_output\\r6c8_output\\',ii,'.im");']);
+end
