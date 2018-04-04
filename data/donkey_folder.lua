@@ -11,6 +11,7 @@
 ]]--
 
 require 'image'
+require 'hdf5' --add h5 module
 paths.dofile('dataset.lua')
 -- This file contains the data-loading logic and details.
 -- It is run by each data-loader thread.
@@ -119,12 +120,20 @@ end
 --local function loadImage
 
 local function loadImage(path)
-   local input = image.load(path, 3, 'float')
-   local h = input:size(2)
-   local w = input:size(3)
+   --local input = image.load(path, 3, 'float')
+   --local fa=h5py.File(path,'r')
+   --local input=fa['img']
+   local myFile=hdf5.open(path,'r')
+   input=myFile:read('/img'):all() 
+   myFile:close()
+   local h = input:size(1)
+   local w = input:size(2)
 
    local imA = image.crop(input, 0, 0, w/2, h)
    local imB = image.crop(input, w/2, 0, w, h)
+   
+   imA = imA:view(1,h,w/2)
+   imB = imB:view(1,h,w/2)
    
    return imA, imB
 end
@@ -172,7 +181,7 @@ local trainHook = function(self, path)
    if opt.preprocess == 'regular' then
 --     print('process regular')
      local imA, imB = loadImage(path)
-     imA, imB = preprocessAandB(imA, imB)
+     -- imA, imB = preprocessAandB(imA, imB)
      imAB = torch.cat(imA, imB, 1)
    end
    
